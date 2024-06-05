@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, json } from "express";
 import * as db from '../db/index.js'
 import { v4 as uuidv4 } from 'uuid';
 
@@ -36,6 +36,38 @@ router.post("/", async (req, res) => {
       res.status(201).json({
         message: 'Bicicleta creada con éxito',
         status: 201,
+        bicicleta: result.rows
+      })
+    } catch (error) {
+      console.error(error)
+
+      res.status(500).json({
+        status: 500,
+        message: 'Error interno de servidor'
+      })
+    }
+  } else {
+    // Bad request
+    res.status(400).json({
+      message: 'Bad request',
+      status: '400',
+      error: "Faltan parámetros en el body"
+    })
+  }
+})
+
+router.put("/", async (req, res) => {
+  const { id, marca, modelo, precio } = req.body
+
+  if ( id && marca && modelo && precio ) {
+    try {
+      const text = 'UPDATE bicicletas SET marca = $2, modelo = $3, precio = $4 WHERE id = $1 RETURNING *'
+      const values = [id, marca, modelo, precio]
+
+      const result = await db.query(text, values)
+
+      res.status(202).json({
+        message: 'Bicicleta actualizada con éxito',
         bicicleta: result.rows
       })
     } catch (error) {
